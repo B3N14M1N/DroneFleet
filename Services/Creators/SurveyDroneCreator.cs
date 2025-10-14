@@ -1,5 +1,6 @@
 ﻿using DroneFleet.Models;
 using DroneFleet.Services.Interfaces;
+using DroneFleet.ConsoleUI;
 
 namespace DroneFleet.Services.Creators;
 
@@ -11,8 +12,7 @@ internal sealed class SurveyDroneCreator : IDroneCreator
     /// <inheritdoc/>
     public Drone CreateInteractive(IDroneFactory factory)
     {
-        Console.Write("Enter name: ");
-        var name = Console.ReadLine() ?? "Unnamed Survey Drone";
+        var name = InputHelpers.PromptForString("Enter name", "Unnamed Survey Drone");
         return factory.Create<SurveyDrone>(name);
     }
 }

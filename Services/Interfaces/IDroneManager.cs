@@ -19,7 +19,7 @@ internal interface IDroneManager
     /// Charges the battery of all drones by the specified amount.
     /// </summary>
     /// <param name="chargeAmount">The amount to charge each drone's battery.</param>
-    void ChargeAllDrones(float chargeAmount);
+    void ChargeAllDrones(double chargeAmount);
 
     /// <summary>
     /// Retrieves a drone by its unique identifier.

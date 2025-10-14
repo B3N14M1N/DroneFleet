@@ -1,6 +1,7 @@
 ﻿using DroneFleet.Contracts;
 using DroneFleet.Models;
 using DroneFleet.Services.Interfaces;
+using DroneFleet.ConsoleUI;
 
 namespace DroneFleet.Services.Creators;
 
@@ -12,28 +13,10 @@ internal sealed class DeliveryDroneCreator : IDroneCreator
     /// <inheritdoc/>
     public Drone CreateInteractive(IDroneFactory factory)
     {
-        Console.Write("Enter name: ");
-        var name = Console.ReadLine() ?? "Unnamed Delivery Drone";
-
-        double capacity;
-        while (true)
-        {
-            Console.Write("Capacity kg (>= 0, default 5): ");
-            var txt = Console.ReadLine();
-            if (string.IsNullOrWhiteSpace(txt)) { capacity = 5.0; break; }
-            if (double.TryParse(txt, out capacity) && capacity >= 0) break;
-            PrintError("Invalid number. Try again.");
-        }
+        var name = InputHelpers.PromptForString("Enter name", "Unnamed Delivery Drone");
+        var capacity = InputHelpers.PromptForDouble("Capacity kg (>= 0)", defaultValue: 5.0, min: 0);
 
         var opts = new DroneCreationOptions { CapacityKg = capacity };
-        return factory.Create<DeliveryDrone>(name, opts);               
-    }
-
-    static void PrintError(string msg)
-    {
-        var prev = Console.ForegroundColor;
-        Console.ForegroundColor = ConsoleColor.Red;
-        Console.WriteLine(msg);
-        Console.ForegroundColor = prev;
+        return factory.Create<DeliveryDrone>(name, opts);
     }
 }

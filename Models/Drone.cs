@@ -6,29 +6,15 @@ namespace DroneFleet.Models;
 internal abstract class Drone : IFlightControl, ISelfTest
 {
     public int Id { get; init; }
-    private string _name = "Unnamed Drone";
-    public string? Name
-    {
-        get => _name;
-        set
-        {
-
-            if (string.IsNullOrWhiteSpace(value))
-            {
-                throw new ArgumentException("Name cannot be null or empty.", nameof(value));
-            }
-
-            _name = value;
-        }
-    }
-    [Range(0.0f, 100.0f)] public float BatteryPercent { get; private set; } = 100.0f;
+    public string Name { get; init; } = "Unnamed Drone";
+    [Range(0.0f, 100.0f)] public double BatteryPercent { get; private set; } = 100.0;
     public bool IsAirborne { get; protected set; } = false;
 
     /// <summary>
     /// Drains battery by the specified amount. Clamps to 0 if drain exceeds current battery.
     /// </summary>
     /// <param name="amount">The amount to drain from battery.</param>
-    protected void DrainBattery(float amount)
+    protected void DrainBattery(double amount)
     {
         BatteryPercent -= amount;
         if (BatteryPercent < 0)
@@ -67,7 +53,7 @@ internal abstract class Drone : IFlightControl, ISelfTest
     }
 
     /// <inheritdoc/>
-    public void ChargeBattery(float charge)
+    public void ChargeBattery(double charge)
     {
         if (charge < 0)
         {

@@ -4,6 +4,10 @@ namespace DroneFleet.Models;
 
 internal class DeliveryDrone : Drone, INavigable, ICargoCarrier
 {
+    private const double BASE_TAKEOFF_DRAIN = 5.0f;
+    private const double BASE_NAVIGATION_DRAIN = 2.0f;
+    private const double LOAD_DRAIN_FACTOR = 0.1f;
+
     public (double lat, double lon)? CurrentWaypoint { get; private set; }
 
     public double CapacityKg { get; init; }
@@ -13,9 +17,12 @@ internal class DeliveryDrone : Drone, INavigable, ICargoCarrier
     /// <inheritdoc/>
     public override void TakeOff()
     {
-        if (BatteryPercent < 20.0f)
+        double takeoffDrain = BASE_TAKEOFF_DRAIN + (CurrentLoadKg * LOAD_DRAIN_FACTOR);
+
+        if (BatteryPercent < 20.0f || BatteryPercent < takeoffDrain)
         {
-            throw new InvalidOperationException("Insufficient battery for takeoff. Minimum 20% required.");
+            throw new InvalidOperationException($"Insufficient battery for takeoff." +
+                $" Minimum {Math.Max(20, takeoffDrain)}% required.");
         }
 
         if (IsAirborne)
@@ -23,10 +30,8 @@ internal class DeliveryDrone : Drone, INavigable, ICargoCarrier
             throw new InvalidOperationException("Drone is already airborne.");
         }
 
-        IsAirborne = true;
-
-        float takeoffDrain = 5.0f + (float)(CurrentLoadKg / 10.0);
         DrainBattery(takeoffDrain);
+        IsAirborne = true;
     }
 
     /// <inheritdoc/>
@@ -44,9 +49,15 @@ internal class DeliveryDrone : Drone, INavigable, ICargoCarrier
     /// <inheritdoc/>
     public void SetWaypoint(double lat, double lon)
     {
-        CurrentWaypoint = (lat, lon);
+        double navigationDrain = BASE_NAVIGATION_DRAIN + (CurrentLoadKg * LOAD_DRAIN_FACTOR);
 
-        float navigationDrain = 2.0f + (float)(CurrentLoadKg / 20.0);
+        if (BatteryPercent < navigationDrain)
+        {
+            throw new InvalidOperationException($"Insufficient battery for movement." +
+                $" Minimum {navigationDrain}% required.");
+        }
+
+        CurrentWaypoint = (lat, lon);
         DrainBattery(navigationDrain);
     }
 

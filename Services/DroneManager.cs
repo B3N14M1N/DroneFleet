@@ -99,7 +99,7 @@ internal class DroneManager : IDroneManager
     }
 
     /// <inheritdoc/>
-    public void ChargeAllDrones(float chargeAmount)
+    public void ChargeAllDrones(double chargeAmount)
     {
         if (_drones.Count == 0)
         {
