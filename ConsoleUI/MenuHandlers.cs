@@ -10,13 +10,13 @@ namespace DroneFleet.ConsoleUI;
 internal class MenuHandlers(
     IDroneManager droneManager,
     IDroneFactory droneFactory,
-    DroneCreationRegistry registry,
+    DroneCreationRegistry creationRegistry,
     CapabilityRegistry capabilityRegistry,
     Dictionary<string, Type> droneCategories)
 {
     private readonly IDroneManager _droneManager = droneManager;
     private readonly IDroneFactory _droneFactory = droneFactory;
-    private readonly DroneCreationRegistry _registry = registry;
+    private readonly DroneCreationRegistry _creationRegistry = creationRegistry;
     private readonly CapabilityRegistry _capabilityRegistry = capabilityRegistry;
     private readonly Dictionary<string, Type> _droneCategories = droneCategories;
 
@@ -29,7 +29,47 @@ internal class MenuHandlers(
         Console.WriteLine("Listing all drones:");
         try
         {
-            _droneManager.ListDronesByCategory(_droneCategories);
+            var drones = _droneManager.Drones.ToList();
+
+            if (drones.Count == 0)
+            {
+                Console.WriteLine("No drones available.");
+                return;
+            }
+
+            foreach (var (categoryName, droneType) in _droneCategories)
+            {
+                var dronesInCategory = drones
+                    .Where(d => d.GetType() == droneType)
+                    .ToList();
+
+                if (dronesInCategory.Count == 0)
+                {
+                    continue;
+                }
+
+                Console.WriteLine($"=== {categoryName} ===");
+                foreach (var drone in dronesInCategory)
+                {
+                    Console.WriteLine(drone);
+                }
+                Console.WriteLine();
+            }
+
+            var categorizedTypes = _droneCategories.Values.ToHashSet();
+            var uncategorized = drones
+                .Where(d => !categorizedTypes.Contains(d.GetType()))
+                .ToList();
+
+            if (uncategorized.Count > 0)
+            {
+                Console.WriteLine("=== Other Drones ===");
+                foreach (var drone in uncategorized)
+                {
+                    Console.WriteLine(drone);
+                }
+                Console.WriteLine();
+            }
         }
         catch (Exception ex)
         {
@@ -46,7 +86,7 @@ internal class MenuHandlers(
         Console.WriteLine("Available types:");
         
         // Create a list to map numbers to creators
-        var creatorsList = _registry.All.ToList();
+        var creatorsList = _creationRegistry.All.ToList();
         for (int i = 0; i < creatorsList.Count; i++)
         {
             var creator = creatorsList[i];
@@ -72,7 +112,7 @@ internal class MenuHandlers(
                 selectedCreator = creatorsList[number - 1];
             }
             // Try to get by key (name)
-            else if (_registry.TryGet(input, out var creator))
+            else if (_creationRegistry.TryGet(input, out var creator))
             {
                 selectedCreator = creator;
             }
@@ -103,7 +143,26 @@ internal class MenuHandlers(
         Console.WriteLine("Running pre-flight checks on all drones:");
         try
         {
-            _droneManager.PreFlightCheckAll();
+            var results = _droneManager.PreFlightCheckAll().ToList();
+
+            if (results.Count == 0)
+            {
+                Console.WriteLine("No drones available.");
+                return;
+            }
+
+            foreach (var result in results)
+            {
+                if (result.Passed)
+                {
+                    InputHelpers.PrintSuccess($"Drone ID: {result.Drone.Id}, Self-test passed.");
+                }
+                else
+                {
+                    var message = result.ErrorMessage ?? "Self-test failed.";
+                    InputHelpers.PrintError($"Drone ID: {result.Drone.Id}, Self-test failed: {message}");
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -235,7 +294,26 @@ internal class MenuHandlers(
             if (chargeInput.Equals("all", StringComparison.CurrentCultureIgnoreCase))
             {
                 Console.WriteLine();
-                _droneManager.ChargeAllDrones(chargeAmount.Value);
+                var results = _droneManager.ChargeAllDrones(chargeAmount.Value).ToList();
+
+                if (results.Count == 0)
+                {
+                    Console.WriteLine("No drones available.");
+                    return;
+                }
+
+                foreach (var result in results)
+                {
+                    if (result.Success)
+                    {
+                        InputHelpers.PrintSuccess($"Drone ID: {result.Drone.Id}, New Battery Level: {result.BatteryLevel}%");
+                    }
+                    else
+                    {
+                        var message = result.ErrorMessage ?? "Charging failed.";
+                        InputHelpers.PrintError($"Drone ID: {result.Drone.Id}, Charging failed: {message}");
+                    }
+                }
             }
             else if (int.TryParse(chargeInput, out int chargeDroneId))
             {

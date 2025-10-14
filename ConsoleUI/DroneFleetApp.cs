@@ -13,7 +13,8 @@ internal class DroneFleetApp
 {
     private readonly IDroneFactory _droneFactory;
     private readonly IDroneManager _droneManager;
-    private readonly DroneCreationRegistry _registry;
+    private readonly IDroneRepository _droneRepository;
+    private readonly DroneCreationRegistry _creationRegistry;
     private readonly CapabilityRegistry _capabilityRegistry;
     private readonly Dictionary<string, Type> _droneCategories;
     private readonly MenuHandlers _menuHandlers;
@@ -21,9 +22,10 @@ internal class DroneFleetApp
     public DroneFleetApp()
     {
         _droneFactory = new DroneFactory();
-        _droneManager = new DroneManager();
+        _droneRepository = new DroneRepository();
+        _droneManager = new DroneManager(_droneRepository);
 
-        _registry = new DroneCreationRegistry(
+        _creationRegistry = new DroneCreationRegistry(
         [
             new DeliveryDroneCreator(),
             new SurveyDroneCreator(),
@@ -47,7 +49,7 @@ internal class DroneFleetApp
         _menuHandlers = new MenuHandlers(
             _droneManager,
             _droneFactory,
-            _registry,
+            _creationRegistry,
             _capabilityRegistry,
             _droneCategories);
     }

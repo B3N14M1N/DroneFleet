@@ -1,129 +1,70 @@
 ﻿using DroneFleet.Models;
 using DroneFleet.Services.Interfaces;
+using DroneFleet.Services.Models;
 
 namespace DroneFleet.Services;
 
-internal class DroneManager : IDroneManager
+internal class DroneManager(IDroneRepository repository) : IDroneManager
 {
-    private readonly List<Drone> _drones = [];
+    private readonly IDroneRepository _repository = repository ?? throw new ArgumentNullException(nameof(repository));
 
-    public IEnumerable<Drone> Drones => _drones.AsReadOnly();
+    public IEnumerable<Drone> Drones => _repository.GetAll();
 
     /// <inheritdoc/>
     public void AddDrone(Drone drone)
     {
-        if (drone == null)
+        _repository.Add(drone);
+    }
+
+    /// <inheritdoc/>
+    public IEnumerable<DroneChargeResult> ChargeAllDrones(double chargeAmount)
+    {
+        foreach (var drone in _repository.GetAll())
         {
-            throw new ArgumentNullException(nameof(drone), "Drone cannot be null.");
+            DroneChargeResult result;
+            try
+            {
+                drone.ChargeBattery(chargeAmount);
+                result = new DroneChargeResult(drone, true, drone.BatteryPercent, null);
+            }
+            catch (Exception ex)
+            {
+                result = new DroneChargeResult(drone, false, null, ex.Message);
+            }
+
+            yield return result;
         }
-        _drones.Add(drone);
     }
 
     /// <inheritdoc/>
     public Drone? GetDroneById(int id)
     {
-        return _drones.FirstOrDefault(d => d.Id == id);
+        return _repository.GetById(id);
+    }
+
+    /// <inheritdoc/>
+    public IEnumerable<DroneSelfTestResult> PreFlightCheckAll()
+    {
+        foreach (var drone in _repository.GetAll())
+        {
+            DroneSelfTestResult outcome;
+            try
+            {
+                bool passed = drone.RunSelfTest();
+                outcome = new DroneSelfTestResult(drone, passed, passed ? null : "Self-test reported failure.");
+            }
+            catch (Exception ex)
+            {
+                outcome = new DroneSelfTestResult(drone, false, ex.Message);
+            }
+
+            yield return outcome;
+        }
     }
 
     /// <inheritdoc/>
     public bool RemoveDrone(int id)
     {
-        var drone = GetDroneById(id);
-        if (drone != null)
-        {
-            return _drones.Remove(drone);
-        }
-        return false;
-    }
-
-    /// <inheritdoc/>
-    public void ListDrones()
-    {
-        if (_drones.Count == 0)
-        {
-            Console.WriteLine("No drones available.");
-            return;
-        }
-        foreach (var drone in _drones)
-        {
-            Console.WriteLine(drone);
-        }
-    }
-
-    /// <inheritdoc/>
-    public void ListDronesByCategory(Dictionary<string, Type> categories)
-    {
-        if (_drones.Count == 0)
-        {
-            Console.WriteLine("No drones available.");
-            return;
-        }
-
-        foreach (var (categoryName, droneType) in categories)
-        {
-            var dronesInCategory = _drones.Where(d => d.GetType() == droneType).ToList();
-
-            if (dronesInCategory.Count != 0)
-            {
-                Console.WriteLine($"=== {categoryName} ===");
-                foreach (var drone in dronesInCategory)
-                {
-                    Console.WriteLine(drone);
-                }
-                Console.WriteLine();
-            }
-        }
-    }
-
-    /// <inheritdoc/>
-    public void PreFlightCheckAll()
-    {
-        if (_drones.Count == 0)
-        {
-            Console.WriteLine("No drones available.");
-            return;
-        }
-
-        foreach (var drone in _drones)
-        {
-            try
-            {
-                bool result = drone.RunSelfTest();
-                Console.WriteLine($"Drone ID: {drone.Id}, Self-test result: {(result ? "Passed" : "Failed")}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Drone ID: {drone.Id}, Self-test failed with error: {ex.Message}");
-            }
-        }
-    }
-
-    /// <inheritdoc/>
-    public void ChargeAllDrones(double chargeAmount)
-    {
-        if (_drones.Count == 0)
-        {
-            Console.WriteLine("No drones available.");
-            return;
-        }
-
-        foreach (var drone in _drones)
-        {
-            try
-            {
-                drone.ChargeBattery(chargeAmount);
-                Console.WriteLine($"Drone ID: {drone.Id}, New Battery Level: {drone.BatteryPercent}%");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Drone ID: {drone.Id}, Charging failed: {ex.Message}");
-            }
-        }
-    }
-
-    /// <inheritdoc/>
-    public IEnumerable<TCapability> GetDronesByCapability<TCapability>()
-    {
-        return _drones.OfType<TCapability>();
+        return _repository.Remove(id);
     }
 }
