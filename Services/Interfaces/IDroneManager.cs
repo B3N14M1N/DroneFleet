@@ -41,6 +41,12 @@ internal interface IDroneManager
     void ListDrones();
 
     /// <summary>
+    /// Lists drones grouped by categories defined in the provided configuration.
+    /// </summary>
+    /// <param name="categories">Dictionary where key is the category name and value is the drone type.</param>
+    public void ListDronesByCategory(Dictionary<string, Type> categories);
+
+    /// <summary>
     /// Performs a pre-flight check on all drones.
     /// </summary>
     void PreFlightCheckAll();

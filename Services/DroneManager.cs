@@ -51,6 +51,31 @@ internal class DroneManager : IDroneManager
     }
 
     /// <inheritdoc/>
+    public void ListDronesByCategory(Dictionary<string, Type> categories)
+    {
+        if (_drones.Count == 0)
+        {
+            Console.WriteLine("No drones available.");
+            return;
+        }
+
+        foreach (var (categoryName, droneType) in categories)
+        {
+            var dronesInCategory = _drones.Where(d => d.GetType() == droneType).ToList();
+
+            if (dronesInCategory.Count != 0)
+            {
+                Console.WriteLine($"=== {categoryName} ===");
+                foreach (var drone in dronesInCategory)
+                {
+                    Console.WriteLine(drone);
+                }
+                Console.WriteLine();
+            }
+        }
+    }
+
+    /// <inheritdoc/>
     public void PreFlightCheckAll()
     {
         if (_drones.Count == 0)
