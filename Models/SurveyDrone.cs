@@ -12,6 +12,7 @@ internal class SurveyDrone : Drone, INavigable, IPhotoCapture
     public void SetWaypoint(double lat, double lon)
     {
         CurrentWaypoint = (lat, lon);
+        DrainBattery(2.0f);
     }
 
     /// <inheritdoc/>
@@ -23,6 +24,7 @@ internal class SurveyDrone : Drone, INavigable, IPhotoCapture
         }
 
         ++PhotoCount;
+        DrainBattery(1.0f);
     }
 
     /// <inheritdoc/>

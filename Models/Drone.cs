@@ -22,7 +22,20 @@ internal abstract class Drone : IFlightControl, ISelfTest
         }
     }
     [Range(0.0f, 100.0f)] public float BatteryPercent { get; private set; } = 100.0f;
-    public bool IsAirborne { get; private set; } = false;
+    public bool IsAirborne { get; protected set; } = false;
+
+    /// <summary>
+    /// Drains battery by the specified amount. Clamps to 0 if drain exceeds current battery.
+    /// </summary>
+    /// <param name="amount">The amount to drain from battery.</param>
+    protected void DrainBattery(float amount)
+    {
+        BatteryPercent -= amount;
+        if (BatteryPercent < 0)
+        {
+            BatteryPercent = 0;
+        }
+    }
 
     /// <inheritdoc/>
     public virtual void Land()
@@ -50,6 +63,7 @@ internal abstract class Drone : IFlightControl, ISelfTest
         }
 
         IsAirborne = true;
+        DrainBattery(5.0f);
     }
 
     /// <inheritdoc/>

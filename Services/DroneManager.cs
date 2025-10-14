@@ -53,20 +53,46 @@ internal class DroneManager : IDroneManager
     /// <inheritdoc/>
     public void PreFlightCheckAll()
     {
+        if (_drones.Count == 0)
+        {
+            Console.WriteLine("No drones available.");
+            return;
+        }
+
         foreach (var drone in _drones)
         {
-            bool result = drone.RunSelfTest();
-            Console.WriteLine($"Drone ID: {drone.Id}, Self-test result: {(result ? "Passed" : "Failed")}");
+            try
+            {
+                bool result = drone.RunSelfTest();
+                Console.WriteLine($"Drone ID: {drone.Id}, Self-test result: {(result ? "Passed" : "Failed")}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Drone ID: {drone.Id}, Self-test failed with error: {ex.Message}");
+            }
         }
     }
 
     /// <inheritdoc/>
     public void ChargeAllDrones(float chargeAmount)
     {
+        if (_drones.Count == 0)
+        {
+            Console.WriteLine("No drones available.");
+            return;
+        }
+
         foreach (var drone in _drones)
         {
-            drone.ChargeBattery(chargeAmount);
-            Console.WriteLine($"Drone ID: {drone.Id}, New Battery Level: {drone.BatteryPercent}%");
+            try
+            {
+                drone.ChargeBattery(chargeAmount);
+                Console.WriteLine($"Drone ID: {drone.Id}, New Battery Level: {drone.BatteryPercent}%");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Drone ID: {drone.Id}, Charging failed: {ex.Message}");
+            }
         }
     }
 
