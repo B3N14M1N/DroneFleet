@@ -11,11 +11,13 @@ internal class MenuHandlers(
     IDroneManager droneManager,
     IDroneFactory droneFactory,
     DroneCreationRegistry registry,
+    CapabilityRegistry capabilityRegistry,
     Dictionary<string, Type> droneCategories)
 {
     private readonly IDroneManager _droneManager = droneManager;
     private readonly IDroneFactory _droneFactory = droneFactory;
     private readonly DroneCreationRegistry _registry = registry;
+    private readonly CapabilityRegistry _capabilityRegistry = capabilityRegistry;
     private readonly Dictionary<string, Type> _droneCategories = droneCategories;
 
     /// <summary>
@@ -61,7 +63,7 @@ internal class MenuHandlers(
 
             if (string.IsNullOrWhiteSpace(input))
             {
-                return; // User cancelled
+                return;
             }
 
             // Try to parse as number first
@@ -182,48 +184,33 @@ internal class MenuHandlers(
         var drone = InputHelpers.PromptForDrone(_droneManager);
         if (drone == null) return;
 
-        (int, int)? capabilitiesRange = null;
-        Console.WriteLine($"\nCapabilities for {drone.Name}:");
+        var handlers = _capabilityRegistry
+            .GetHandlersFor(drone)
+            .ToList();
 
-        if (drone is IPhotoCapture)
-        {
-            Console.WriteLine("1. Photo Capture");
-            capabilitiesRange = (1, 1);
-        }
-
-        if (drone is ICargoCarrier)
-        {
-            Console.WriteLine("1. Load Cargo");
-            Console.WriteLine("2. Unload All Cargo");
-            capabilitiesRange = (1, 2);
-        }
-        
-        if (capabilitiesRange == null)
+        if (handlers.Count == 0)
         {
             InputHelpers.PrintError("This drone has no special capabilities.");
             return;
         }
 
-        var action = InputHelpers.PromptForOption("\nSelect capability action", capabilitiesRange.Value.Item2, capabilitiesRange.Value.Item1);
-        if (action == null) return;
+        Console.WriteLine($"\nCapabilities for {drone.Name}:");
+        for (int index = 0; index < handlers.Count; index++)
+        {
+            Console.WriteLine($"{index + 1}. {handlers[index].DisplayName}");
+        }
+
+        var selection = InputHelpers.PromptForOption("\nSelect capability action", handlers.Count);
+        if (selection == null)
+        {
+            return;
+        }
+
+        var handler = handlers[selection.Value - 1];
 
         try
         {
-            switch (action.Value)
-            {
-                case 1 when drone is IPhotoCapture photoCapture:
-                    CapabilityHandlers.HandlePhotoCapture(photoCapture, drone);
-                    break;
-                case 1 when drone is ICargoCarrier cargoCarrier:
-                    CapabilityHandlers.HandleCargoLoad(cargoCarrier);
-                    break;
-                case 2 when drone is ICargoCarrier cargoCarrier:
-                    CapabilityHandlers.HandleCargoUnload(cargoCarrier);
-                    break;
-                default:
-                    InputHelpers.PrintError("Invalid action or capability not supported.");
-                    break;
-            }
+            handler.Execute(drone);
         }
         catch (Exception ex)
         {

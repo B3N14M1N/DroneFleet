@@ -1,5 +1,6 @@
 using DroneFleet.Models;
 using DroneFleet.Services;
+using DroneFleet.Services.Capabilities;
 using DroneFleet.Services.Creators;
 using DroneFleet.Services.Interfaces;
 
@@ -13,6 +14,7 @@ internal class DroneFleetApp
     private readonly IDroneFactory _droneFactory;
     private readonly IDroneManager _droneManager;
     private readonly DroneCreationRegistry _registry;
+    private readonly CapabilityRegistry _capabilityRegistry;
     private readonly Dictionary<string, Type> _droneCategories;
     private readonly MenuHandlers _menuHandlers;
 
@@ -28,6 +30,13 @@ internal class DroneFleetApp
             new RacingDroneCreator(),
         ]);
 
+        _capabilityRegistry = new CapabilityRegistry(
+        [
+            new PhotoCaptureCapabilityHandler(),
+            new CargoLoadCapabilityHandler(),
+            new CargoUnloadCapabilityHandler(),
+        ]);
+
         _droneCategories = new Dictionary<string, Type>
         {
             { "Delivery Drones", typeof(DeliveryDrone) },
@@ -35,7 +44,12 @@ internal class DroneFleetApp
             { "Racing Drones", typeof(RacingDrone) }
         };
 
-        _menuHandlers = new MenuHandlers(_droneManager, _droneFactory, _registry, _droneCategories);
+        _menuHandlers = new MenuHandlers(
+            _droneManager,
+            _droneFactory,
+            _registry,
+            _capabilityRegistry,
+            _droneCategories);
     }
 
     /// <summary>
