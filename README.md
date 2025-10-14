@@ -15,8 +15,9 @@ The README below explains the project structure, the runtime flow, where core OO
 	- `Interfaces/` — capability interfaces (e.g., `ICargoCarrier`, `IFlightControl`, `INavigable`, `IPhotoCapture`, `ISelfTest`).
 - `Services/` — business logic and orchestration:
 	- `DroneFactory.cs`, `DroneCreationRegistry.cs`, `DroneManager.cs` — core services that create and manage drones.
+	- `CapabilityRegistry.cs`, `Capabilities/` — registry and capability action handlers wired into the UI.
 	- `Creators/` — individual creator classes for each drone type (`DeliveryDroneCreator`, `RacingDroneCreator`, `SurveyDroneCreator`).
-	- `Interfaces/` — service-level interfaces (`IDroneCreator`, `IDroneFactory`, `IDroneManager`) used for decoupling and dependency inversion.
+	- `Interfaces/` — service-level interfaces (`IDroneCreator`, `IDroneFactory`, `IDroneManager`, `ICapabilityActionHandler`) used for decoupling and dependency inversion.
 
 ## How the application works (high-level logic)
 
@@ -24,7 +25,7 @@ The README below explains the project structure, the runtime flow, where core OO
 2. The UI receives user input (via `InputHelpers.cs`) and delegates creation requests to a factory service.
 3. `DroneFactory` consults the `DroneCreationRegistry` (mapping of types to creators) to select an appropriate `IDroneCreator` and create a concrete `Drone` instance using `DroneCreationOptions` from `Contracts`.
 4. Created drone instances implement specific capability interfaces and are managed by `DroneManager`, which performs higher-level operations (registering, listing, invoking behaviors).
-5. UI handlers (`MenuHandlers.cs`, `CapabilityHandlers.cs`) interact only with service interfaces or domain interfaces, keeping presentation separate from business logic.
+5. UI handlers (`MenuHandlers.cs`) interact only with service interfaces and dispatch capability actions through the service-level registry, keeping presentation separate from business logic.
 
 ## OOP concepts used
 
@@ -47,7 +48,7 @@ The README below explains the project structure, the runtime flow, where core OO
 - Registry pattern: `DroneCreationRegistry` acts as a mapping/registry of available creators keyed by type; it centralizes creator discovery and supports extension.
 - Dependency Injection (DI) style: The project favors programming to interfaces and passing concrete implementations into consumers (via constructors or service wiring in `Program.cs`), which is consistent with DI principles even if a DI container isn't used.
 - Strategy/Capability pattern (interface-based): By modeling capabilities as interfaces (e.g., `IPhotoCapture`, `ICargoCarrier`), the code uses a strategy-like approach where behavior can be swapped or tested independently.
-- Command-like handlers: `MenuHandlers` and `CapabilityHandlers` organize user actions into discrete handler methods, which keeps the UI command flow modular and testable.
+- Command-like handlers: `MenuHandlers` and service capability handlers organize user actions into discrete methods, keeping the UI command flow modular and testable.
 
 Note: The project deliberately keeps patterns minimal and explicit to demonstrate understanding rather than relying on heavy frameworks.
 
@@ -57,6 +58,8 @@ Note: The project deliberately keeps patterns minimal and explicit to demonstrat
 - `Models/Interfaces/*.cs` — interface segregation and capability-based design.
 - `Services/DroneFactory.cs` — factory/creation logic and OCP.
 - `Services/DroneCreationRegistry.cs` — registry and extension point for new creators.
+- `Services/CapabilityRegistry.cs` — capability handler discovery for the UI.
+- `Services/Capabilities/*.cs` — capability action handlers.
 - `Services/Creators/*.cs` — concrete creator implementations.
 - `Services/DroneManager.cs` — manager/service for drone lifecycle (SRP, DIP in relation to interfaces).
 - `ConsoleUI/*` — presentation layer separated from business logic (separation of concerns).
