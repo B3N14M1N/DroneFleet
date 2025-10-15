@@ -20,9 +20,21 @@ internal sealed class FlightControlMenuAction(IDroneManager droneManager) : IMen
             return MenuActionOutcome.Continue;
         }
 
+        Console.WriteLine();
         Console.WriteLine($"Current status: {(drone.IsAirborne ? "Airborne" : "Landed")}");
+        Console.WriteLine("Actions:");
 
-        var action = InputHelpers.PromptForOption("Action (1=TakeOff, 2=Land) (or press Enter to cancel): ", 2);
+        var flightActions = new[] { "TakeOff", "Land" };
+        for (int i = 0; i < flightActions.Length; i++)
+        {
+            Console.WriteLine($"{i + 1}. {flightActions[i]}");
+        }
+
+        var action = InputHelpers.PromptForOption(
+            "Enter action (number or name) (or press Enter to cancel): ",
+            2,
+            validStrings: flightActions);
+
         if (action == null)
         {
             return MenuActionOutcome.Continue;
