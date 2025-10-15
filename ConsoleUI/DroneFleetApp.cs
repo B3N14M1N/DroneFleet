@@ -1,3 +1,5 @@
+using DroneFleet.ConsoleUI.Menu;
+using DroneFleet.ConsoleUI.Menu.Actions;
 using DroneFleet.Models;
 using DroneFleet.Services;
 using DroneFleet.Services.Capabilities;
@@ -17,7 +19,7 @@ internal class DroneFleetApp
     private readonly DroneCreationRegistry _creationRegistry;
     private readonly CapabilityRegistry _capabilityRegistry;
     private readonly Dictionary<string, Type> _droneCategories;
-    private readonly MenuHandlers _menuHandlers;
+    private readonly MenuActionRegistry _menuActionRegistry;
 
     public DroneFleetApp()
     {
@@ -46,12 +48,16 @@ internal class DroneFleetApp
             { "Racing Drones", typeof(RacingDrone) }
         };
 
-        _menuHandlers = new MenuHandlers(
-            _droneManager,
-            _droneFactory,
-            _creationRegistry,
-            _capabilityRegistry,
-            _droneCategories);
+        _menuActionRegistry = new MenuActionRegistry();
+
+        _menuActionRegistry.Register(new ListDronesMenuAction(_droneManager, _droneCategories));
+        _menuActionRegistry.Register(new AddDroneMenuAction(_droneManager, _droneFactory, _creationRegistry));
+        _menuActionRegistry.Register(new PreFlightCheckMenuAction(_droneManager));
+        _menuActionRegistry.Register(new FlightControlMenuAction(_droneManager));
+        _menuActionRegistry.Register(new SetWaypointMenuAction(_droneManager));
+        _menuActionRegistry.Register(new CapabilityActionsMenuAction(_droneManager, _capabilityRegistry));
+        _menuActionRegistry.Register(new ChargeBatteryMenuAction(_droneManager));
+        _menuActionRegistry.Register(new ExitMenuAction());
     }
 
     /// <summary>
@@ -61,86 +67,50 @@ internal class DroneFleetApp
     {
         while (true)
         {
-            DisplayMenu();
-            var choice = Console.ReadLine();
+            var actions = _menuActionRegistry.Actions;
+            DisplayMenu(actions);
 
-            if (!ProcessMenuChoice(choice))
+            var selection = InputHelpers.PromptForOption("Select an option", actions.Count);
+            if (selection == null)
             {
-                return; // Exit application
+                continue;
             }
 
-            Console.WriteLine();
-            Console.WriteLine("Press any key to continue...");
-            Console.ReadKey();
+            var action = actions[selection.Value - 1];
+            var outcome = action.Execute();
+            if (outcome == MenuActionOutcome.Exit)
+            {
+                return;
+            }
+
+            PauseForUser();
         }
     }
 
     /// <summary>
     /// Displays the main menu.
     /// </summary>
-    private static void DisplayMenu()
+    private static void DisplayMenu(IReadOnlyList<IMenuAction> actions)
     {
         Console.Clear();
-        Console.Write(
-            """
-            Drone Fleet Management System Menu:
-            1. List drones
-            2. Add drone
-            3. Pre-flight check (all)
-            4. Take off / Land
-            5. Set waypoint
-            6. Capability actions
-            7. Charge battery
-            8. Exit
-            Select an option: 
-            """);
+        Console.WriteLine("Drone Fleet Management System Menu:");
+
+        for (int index = 0; index < actions.Count; index++)
+        {
+            var menuAction = actions[index];
+            var optionNumber = index + 1;
+            Console.WriteLine($"{optionNumber}. {menuAction.Label}");
+            if (!string.IsNullOrWhiteSpace(menuAction.Description))
+            {
+                Console.WriteLine($"   {menuAction.Description}");
+            }
+        }
     }
 
-    /// <summary>
-    /// Processes the user's menu choice.
-    /// </summary>
-    /// <param name="choice">The menu choice entered by the user.</param>
-    /// <returns>True to continue the application loop; false to exit.</returns>
-    private bool ProcessMenuChoice(string? choice)
+    private static void PauseForUser()
     {
-        switch (choice)
-        {
-            case "1":
-                _menuHandlers.HandleListDrones();
-                break;
-
-            case "2":
-                _menuHandlers.HandleAddDrone();
-                break;
-
-            case "3":
-                _menuHandlers.HandlePreFlightCheck();
-                break;
-
-            case "4":
-                _menuHandlers.HandleFlightControl();
-                break;
-
-            case "5":
-                _menuHandlers.HandleSetWaypoint();
-                break;
-
-            case "6":
-                _menuHandlers.HandleCapabilityActions();
-                break;
-
-            case "7":
-                _menuHandlers.HandleChargeBattery();
-                break;
-
-            case "8":
-                return false;
-
-            default:
-                Console.WriteLine("\nInvalid option. Please try again.");
-                break;
-        }
-
-        return true;
+        Console.WriteLine();
+        Console.WriteLine("Press any key to continue...");
+        Console.ReadKey();
     }
 }

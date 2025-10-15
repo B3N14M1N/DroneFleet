@@ -2,6 +2,7 @@
 
 internal class RacingDrone : Drone
 {
+    private const double TAKEOFF_BATTERY_DRAIN = 3.0f;
     /// <inheritdoc/>
     public override void TakeOff()
     {
@@ -16,6 +17,6 @@ internal class RacingDrone : Drone
         }
 
         IsAirborne = true;
-        DrainBattery(3.0f); 
+        DrainBattery(TAKEOFF_BATTERY_DRAIN); 
     }
 }

@@ -4,9 +4,9 @@ namespace DroneFleet.Models;
 
 internal class DeliveryDrone : Drone, INavigable, ICargoCarrier
 {
-    private const double BASE_TAKEOFF_DRAIN = 5.0f;
-    private const double BASE_NAVIGATION_DRAIN = 2.0f;
-    private const double LOAD_DRAIN_FACTOR = 0.1f;
+    private const double BASE_TAKEOFF_DRAIN = 5.0;
+    private const double BASE_NAVIGATION_DRAIN = 2.0;
+    private const double LOAD_DRAIN_FACTOR = 0.1;
 
     public (double lat, double lon)? CurrentWaypoint { get; private set; }
 
@@ -17,9 +17,9 @@ internal class DeliveryDrone : Drone, INavigable, ICargoCarrier
     /// <inheritdoc/>
     public override void TakeOff()
     {
-        double takeoffDrain = BASE_TAKEOFF_DRAIN + (CurrentLoadKg * LOAD_DRAIN_FACTOR);
+        double takeoffDrain = Math.Round(BASE_TAKEOFF_DRAIN + (CurrentLoadKg * LOAD_DRAIN_FACTOR), 2);
 
-        if (BatteryPercent < 20.0f || BatteryPercent < takeoffDrain)
+        if (BatteryPercent < 20.0 || BatteryPercent < takeoffDrain)
         {
             throw new InvalidOperationException($"Insufficient battery for takeoff." +
                 $" Minimum {Math.Max(20, takeoffDrain)}% required.");
@@ -32,6 +32,13 @@ internal class DeliveryDrone : Drone, INavigable, ICargoCarrier
 
         DrainBattery(takeoffDrain);
         IsAirborne = true;
+    }
+
+    /// <inheritdoc/>
+    public override bool RunSelfTest()
+    {
+        double takeoffDrain = Math.Round(BASE_TAKEOFF_DRAIN + (CurrentLoadKg * LOAD_DRAIN_FACTOR), 2);
+        return BatteryPercent >= Math.Max(20.0, takeoffDrain);
     }
 
     /// <inheritdoc/>
@@ -49,7 +56,7 @@ internal class DeliveryDrone : Drone, INavigable, ICargoCarrier
     /// <inheritdoc/>
     public void SetWaypoint(double lat, double lon)
     {
-        double navigationDrain = BASE_NAVIGATION_DRAIN + (CurrentLoadKg * LOAD_DRAIN_FACTOR);
+        double navigationDrain = Math.Round(BASE_NAVIGATION_DRAIN + (CurrentLoadKg * LOAD_DRAIN_FACTOR), 2);
 
         if (BatteryPercent < navigationDrain)
         {

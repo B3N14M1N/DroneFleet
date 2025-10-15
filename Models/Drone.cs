@@ -30,7 +30,7 @@ internal abstract class Drone : IFlightControl, ISelfTest
     }
 
     /// <inheritdoc/>
-    public bool RunSelfTest()
+    public virtual bool RunSelfTest()
     {
         return BatteryPercent >= 20.0f;
     }
