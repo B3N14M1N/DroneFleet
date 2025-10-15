@@ -45,67 +45,17 @@ internal static class InputHelpers
     }
 
     /// <summary>
-    /// Prompts the user to enter latitude and longitude coordinates.
-    /// Retries until valid input or user cancels with empty input.
-    /// </summary>
-    /// <returns>A tuple containing latitude and longitude if valid; otherwise, null.</returns>
-    public static (double lat, double lon)? PromptForCoordinates()
-    {
-        double lat;
-        Console.WriteLine("Enter latitude (or press Enter to cancel): ");
-        while (true)
-        {
-            Console.Write(">>> ");
-            var input = Console.ReadLine();
-
-            if (string.IsNullOrWhiteSpace(input))
-            {
-                return null;
-            }
-
-            if (!double.TryParse(input, out lat))
-            {
-                PrintError("Invalid latitude. Please enter a valid number.");
-                continue;
-            }
-
-            break;
-        }
-
-        double lon;
-        Console.WriteLine("Enter longitude (or press Enter to cancel): ");
-        while (true)
-        {
-            Console.Write(">>> ");
-            var input = Console.ReadLine();
-
-            if (string.IsNullOrWhiteSpace(input))
-            {
-                return null;
-            }
-
-            if (!double.TryParse(input, out lon))
-            {
-                PrintError("Invalid longitude. Please enter a valid number.");
-                continue;
-            }
-
-            break;
-        }
-
-        return (lat, lon);
-    }
-
-    /// <summary>
     /// Prompts the user to select from numbered options.
     /// Retries until valid input or user cancels with empty input.
     /// </summary>
     /// <param name="prompt">The prompt message to display.</param>
     /// <param name="maxOption">The maximum option number (1-based).</param>
+    /// <param name="minOption">The minimum option number (1-based).</param>
+    /// <param name="validStrings">Optional array of valid string inputs that can be entered instead of numbers.</param>
     /// <returns>The selected option number (1-based), or null if cancelled.</returns>
-    public static int? PromptForOption(string prompt, int maxOption, int minOption = 1)
+    public static int? PromptForOption(string prompt, int maxOption, int minOption = 1, string[]? validStrings = null)
     {
-        Console.WriteLine($"{prompt} (or press Enter to cancel): ");
+        Console.WriteLine($"{prompt}");
         while (true)
         {
             Console.Write(">>> ");
@@ -116,19 +66,27 @@ internal static class InputHelpers
                 return null;
             }
 
-            if (!int.TryParse(input, out int option))
+            if (int.TryParse(input, out int option))
             {
-                PrintError("Invalid input. Please enter a number.");
-                continue;
+                if (option < minOption || option > maxOption)
+                {
+                    PrintError($"Please enter a number between {minOption} and {maxOption}.");
+                    continue;
+                }
+
+                return option;
             }
 
-            if (option < minOption || option > maxOption)
+            if (validStrings != null)
             {
-                PrintError($"Please enter a number between {minOption} and {maxOption}.");
-                continue;
+                int index = Array.FindIndex(validStrings, item => item.Equals(input, StringComparison.OrdinalIgnoreCase));
+                if (index >= 0)
+                {
+                    return index + 1;
+                }
             }
 
-            return option;
+            PrintError("Invalid input. Please enter a number" + (validStrings != null ? " or a valid option name." : "."));
         }
     }
 

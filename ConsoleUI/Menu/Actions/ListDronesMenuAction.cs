@@ -10,8 +10,7 @@ internal sealed class ListDronesMenuAction(IDroneManager droneManager, Dictionar
 
     public string Label => "List drones";
 
-    public string Description => "Display all drones grouped by category";
-
+    /// <inheritdoc/>
     public MenuActionOutcome Execute()
     {
         ArgumentNullException.ThrowIfNull(_droneManager);

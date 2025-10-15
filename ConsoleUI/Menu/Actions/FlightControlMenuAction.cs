@@ -8,8 +8,7 @@ internal sealed class FlightControlMenuAction(IDroneManager droneManager) : IMen
 
     public string Label => "Take off / Land";
 
-    public string Description => "Toggle drone flight status";
-
+    /// <inheritdoc/>
     public MenuActionOutcome Execute()
     {
         ArgumentNullException.ThrowIfNull(_droneManager);
@@ -23,7 +22,7 @@ internal sealed class FlightControlMenuAction(IDroneManager droneManager) : IMen
 
         Console.WriteLine($"Current status: {(drone.IsAirborne ? "Airborne" : "Landed")}");
 
-        var action = InputHelpers.PromptForOption("Action (1=TakeOff, 2=Land)", 2);
+        var action = InputHelpers.PromptForOption("Action (1=TakeOff, 2=Land) (or press Enter to cancel): ", 2);
         if (action == null)
         {
             return MenuActionOutcome.Continue;

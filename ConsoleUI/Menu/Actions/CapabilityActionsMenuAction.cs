@@ -10,8 +10,7 @@ internal sealed class CapabilityActionsMenuAction(IDroneManager droneManager, Ca
 
     public string Label => "Capability actions";
 
-    public string Description => "Execute special actions supported by a drone";
-
+    /// <inheritdoc/>
     public MenuActionOutcome Execute()
     {
         ArgumentNullException.ThrowIfNull(_droneManager);
@@ -40,7 +39,7 @@ internal sealed class CapabilityActionsMenuAction(IDroneManager droneManager, Ca
             Console.WriteLine($"{index + 1}. {handlers[index].DisplayName}");
         }
 
-        var selection = InputHelpers.PromptForOption("\nSelect capability action", handlers.Count);
+        var selection = InputHelpers.PromptForOption("\nSelect capability action (or press Enter to cancel): ", handlers.Count);
         if (selection == null)
         {
             return MenuActionOutcome.Continue;

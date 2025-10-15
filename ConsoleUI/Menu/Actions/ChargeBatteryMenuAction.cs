@@ -8,8 +8,7 @@ internal sealed class ChargeBatteryMenuAction(IDroneManager droneManager) : IMen
 
     public string Label => "Charge battery";
 
-    public string Description => "Charge one or all drones";
-
+    /// <inheritdoc/>
     public MenuActionOutcome Execute()
     {
         ArgumentNullException.ThrowIfNull(_droneManager);

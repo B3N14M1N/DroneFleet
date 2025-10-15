@@ -9,8 +9,6 @@ internal sealed class SetWaypointMenuAction(IDroneManager droneManager) : IMenuA
 
     public string Label => "Set waypoint";
 
-    public string Description => "Assign a waypoint to a navigable drone";
-
     /// <inheritdoc/>
     public MenuActionOutcome Execute()
     {
@@ -29,17 +27,22 @@ internal sealed class SetWaypointMenuAction(IDroneManager droneManager) : IMenuA
             return MenuActionOutcome.Continue;
         }
 
-        var coordinates = InputHelpers.PromptForCoordinates();
-        if (coordinates == null)
+        var lat = InputHelpers.PromptForDouble("Enter latitude (or press Enter to cancel):");
+        if (lat == null)
+        {
+            return MenuActionOutcome.Continue;
+        }
+
+        var lon = InputHelpers.PromptForDouble("Enter longitude (or press Enter to cancel):");
+        if (lon == null)
         {
             return MenuActionOutcome.Continue;
         }
 
         try
         {
-            var (lat, lon) = coordinates.Value;
-            navigableDrone.SetWaypoint(lat, lon);
-            InputHelpers.PrintSuccess($"Waypoint set to ({lat}, {lon}) for {drone.Name}. Battery: {drone.BatteryPercent}%");
+            navigableDrone.SetWaypoint(lat.Value, lon.Value);
+            InputHelpers.PrintSuccess($"Waypoint set to ({lat.Value}, {lon.Value}) for {drone.Name}. Battery: {drone.BatteryPercent}%");
         }
         catch (Exception ex)
         {

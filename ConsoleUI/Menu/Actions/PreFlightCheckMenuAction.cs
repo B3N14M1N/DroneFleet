@@ -8,8 +8,7 @@ internal sealed class PreFlightCheckMenuAction(IDroneManager droneManager) : IMe
 
     public string Label => "Pre-flight check (all)";
 
-    public string Description => "Run self-tests for every drone";
-
+    /// <inheritdoc/>
     public MenuActionOutcome Execute()
     {
         ArgumentNullException.ThrowIfNull(_droneManager);

@@ -70,7 +70,7 @@ internal class DroneFleetApp
             var actions = _menuActionRegistry.Actions;
             DisplayMenu(actions);
 
-            var selection = InputHelpers.PromptForOption("Select an option", actions.Count);
+            var selection = InputHelpers.PromptForOption("Select an option:", actions.Count);
             if (selection == null)
             {
                 continue;
@@ -100,10 +100,6 @@ internal class DroneFleetApp
             var menuAction = actions[index];
             var optionNumber = index + 1;
             Console.WriteLine($"{optionNumber}. {menuAction.Label}");
-            if (!string.IsNullOrWhiteSpace(menuAction.Description))
-            {
-                Console.WriteLine($"   {menuAction.Description}");
-            }
         }
     }
 

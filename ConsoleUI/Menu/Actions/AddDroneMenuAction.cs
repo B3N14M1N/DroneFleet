@@ -14,8 +14,7 @@ internal sealed class AddDroneMenuAction(
 
     public string Label => "Add drone";
 
-    public string Description => "Create and add a new drone";
-
+    /// <inheritdoc/>
     public MenuActionOutcome Execute()
     {
         ArgumentNullException.ThrowIfNull(_droneManager);
@@ -32,32 +31,18 @@ internal sealed class AddDroneMenuAction(
             Console.WriteLine($"{i + 1}. {creator.Key} ({creator.DisplayName})");
         }
 
-        IDroneCreator? selectedCreator = null;
+        var creatorKeys = creatorsList.Select(c => c.Key).ToArray();
+        var selectedIndex = InputHelpers.PromptForOption(
+            "Enter drone type (number or name) (or press Enter to cancel): ",
+            creatorsList.Count,
+            validStrings:creatorKeys);
 
-        while (selectedCreator == null)
+        if (selectedIndex == null)
         {
-            Console.WriteLine("\nEnter drone type (number or name) or press Enter to cancel: ");
-            Console.Write(">>> ");
-            var input = Console.ReadLine();
-
-            if (string.IsNullOrWhiteSpace(input))
-            {
-                return MenuActionOutcome.Continue;
-            }
-
-            if (int.TryParse(input, out int number) && number >= 1 && number <= creatorsList.Count)
-            {
-                selectedCreator = creatorsList[number - 1];
-            }
-            else if (_creationRegistry.TryGet(input, out var creator))
-            {
-                selectedCreator = creator;
-            }
-            else
-            {
-                InputHelpers.PrintError("Unknown type. Please try again.");
-            }
+            return MenuActionOutcome.Continue;
         }
+
+        var selectedCreator = creatorsList[selectedIndex.Value - 1];
 
         try
         {

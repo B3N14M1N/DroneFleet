@@ -4,8 +4,7 @@ internal sealed class ExitMenuAction : IMenuAction
 {
     public string Label => "Exit";
 
-    public string Description => "Close the application";
-
+    /// <inheritdoc/>
     public MenuActionOutcome Execute()
     {
         Console.WriteLine("\nExiting Drone Fleet Management System. Goodbye!");
