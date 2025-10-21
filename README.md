@@ -7,16 +7,15 @@ The README below explains the project structure, the runtime flow, where core OO
 ## Project structure
 
 - `Program.cs` — application entry point.
-- `ConsoleUI/` — user-facing console layer: `Menu/` holds the `IMenuAction` implementations and registry, `InputHelpers.cs` manages prompts, and `DroneDisplayFormatter.cs` centralizes console output formatting.
+- `ConsoleUI/` — user-facing console layer: `Menu/` holds the `IMenuAction` implementations and registry, `Creators/` contains console-specific `IDroneCreator` implementations, `InputHelpers.cs` manages prompts, and `DroneDisplayFormatter.cs` centralizes console output formatting.
 - `Contracts/` — DTOs and options used to pass data into factory/creation methods (e.g., `DroneCreationOptions`).
 - `Models/` — domain model classes:
 	- `Drone.cs` — base/domain class for drones.
 	- `DeliveryDrone.cs`, `RacingDrone.cs`, `SurveyDrone.cs` — concrete drone types inheriting from `Drone`.
 	- `Interfaces/` — capability interfaces (e.g., `ICargoCarrier`, `IFlightControl`, `INavigable`, `IPhotoCapture`, `ISelfTest`).
 - `Services/` — business logic and orchestration:
-	- `DroneFactory.cs`, `DroneCreationRegistry.cs`, `DroneManager.cs`, `DroneRepository.cs` — core services that create drones, keep the registry of creators, and store active drone instances.
+	- `DroneFactory.cs`, `DroneCreationRegistry.cs`, `DroneManager.cs`, `DroneRepository.cs` — core services that create drones, keep the registry of creator mappings, and store active drone instances.
 	- `CapabilityRegistry.cs`, `Capabilities/` — registry and capability action handlers wired into the UI.
-	- `Creators/` — individual creator classes for each drone type (`DeliveryDroneCreator`, `RacingDroneCreator`, `SurveyDroneCreator`).
 	- `Interfaces/` — service-level interfaces (`IDroneCreator`, `IDroneFactory`, `IDroneManager`, `IDroneRepository`, `ICapabilityActionHandler`) used for decoupling and dependency inversion.
 
 ## How the application works (high-level logic)
@@ -44,7 +43,7 @@ The README below explains the project structure, the runtime flow, where core OO
 
 ## Design patterns observed
 
-- Factory / Creator pattern: `DroneFactory` and the `Creators/*` classes encapsulate how concrete drone objects are constructed.
+- Factory / Creator pattern: `DroneFactory` and the console creator classes in `ConsoleUI/Creators/*` encapsulate how concrete drone objects are constructed.
 - Registry pattern: `DroneCreationRegistry` acts as a mapping/registry of available creators keyed by type; it centralizes creator discovery and supports extension.
 - Dependency Injection (DI) style: The project favors programming to interfaces and passing concrete implementations into consumers (via constructors or service wiring in `Program.cs`), which is consistent with DI principles even if a DI container isn't used.
 - Strategy/Capability pattern (interface-based): By modeling capabilities as interfaces (e.g., `IPhotoCapture`, `ICargoCarrier`), the code uses a strategy-like approach where behavior can be swapped or tested independently.
@@ -60,7 +59,7 @@ Note: The project deliberately keeps patterns minimal and explicit to demonstrat
 - `Services/DroneCreationRegistry.cs` — registry and extension point for new creators.
 - `Services/CapabilityRegistry.cs` — capability handler discovery for the UI.
 - `Services/Capabilities/*.cs` — capability action handlers.
-- `Services/Creators/*.cs` — concrete creator implementations.
+- `ConsoleUI/Creators/*.cs` — console-specific creator implementations.
 - `Services/DroneManager.cs`, `Services/DroneRepository.cs` — lifecycle coordination and persistence layer for active drones (SRP, DIP in relation to interfaces).
 - `ConsoleUI/*` — presentation layer separated from business logic (separation of concerns), with `Menu/Actions/*.cs` defining menu commands.
 
