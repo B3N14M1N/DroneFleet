@@ -1,9 +1,8 @@
 ﻿using DroneFleet.Contracts;
 using DroneFleet.Models;
 using DroneFleet.Services.Interfaces;
-using DroneFleet.ConsoleUI;
 
-namespace DroneFleet.Services.Creators;
+namespace DroneFleet.ConsoleUI.Creators;
 
 internal sealed class DeliveryDroneCreator : IDroneCreator
 {

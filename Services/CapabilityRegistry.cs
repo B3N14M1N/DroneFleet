@@ -8,7 +8,7 @@ namespace DroneFleet.Services;
 /// </summary>
 internal sealed class CapabilityRegistry(IEnumerable<ICapabilityActionHandler> handlers)
 {
-    private readonly List<ICapabilityActionHandler> _handlers = handlers.ToList();
+    private readonly List<ICapabilityActionHandler> _handlers = [.. handlers];
     private readonly Dictionary<string, ICapabilityActionHandler> _handlersByKey =
         handlers.ToDictionary(handler => handler.Key, StringComparer.OrdinalIgnoreCase);
 

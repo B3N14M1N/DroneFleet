@@ -35,7 +35,7 @@ internal sealed class AddDroneMenuAction(
         var selectedIndex = InputHelpers.PromptForOption(
             "Enter drone type (number or name) (or press Enter to cancel): ",
             creatorsList.Count,
-            validStrings:creatorKeys);
+            validStrings: creatorKeys);
 
         if (selectedIndex == null)
         {
