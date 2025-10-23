@@ -1,0 +1,4 @@
+Id,Name,Kind,BatteryPercent,IsAirborne,LoadKg,WaypointLat,WaypointLon,PhotoCount
+20,DeliveryPrime,Delivery,80,false,3.2,37.7749,-122.4194,
+21,HawkEye,Survey,55,true,,48.8566,2.3522,7
+22,LightningBolt,Racing,44,false,,,,

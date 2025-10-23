@@ -1,0 +1,5 @@
+Id,Name,Kind,BatteryPercent,IsAirborne,LoadKg,WaypointLat,WaypointLon,PhotoCount
+10,CargoLite,Delivery,50,false,5,51.5074,-0.1278,
+11,RacerX,Racing,110,false,,,,
+12,SurveyScope,Survey,70,false,,invalid,invalid,three
+13,,Delivery,40,false,12,,,

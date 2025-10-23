@@ -1,0 +1,4 @@
+Id,Name,Kind,BatteryPercent,IsAirborne,LoadKg,WaypointLat,WaypointLon,PhotoCount
+1,SwiftRunner,Racing,87,false,,, ,
+2,CargoMaster,Delivery,65,true,4.5,34.0522,-118.2437,
+3,SurveyorOne,Survey,92,true,,40.7128,-74.0060,12

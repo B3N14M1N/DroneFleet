@@ -1,0 +1,4 @@
+Id,Name,Kind,BatteryPercent,IsAirborne,LoadKg,WaypointLat,WaypointLon,PhotoCount
+1,AltSwift,Racing,75,false,,, ,
+20,DeliveryPrime,Delivery,80,false,3.2,37.7749,-122.4194,
+30,SurveySky,Survey,68,true,,35.6895,139.6917,5
