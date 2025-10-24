@@ -1,9 +1,3 @@
-using System.Collections.Concurrent;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
 using DroneFleet.Domain.Analytics;
 using DroneFleet.Domain.Common;
 using DroneFleet.Domain.Extensions;
@@ -13,6 +7,10 @@ using DroneFleet.Domain.Operations;
 using DroneFleet.Domain.Repositories;
 using DroneFleet.Domain.Services;
 using DroneFleet.Infrastructure.FileIO;
+using System.Collections.Concurrent;
+using System.Globalization;
+using System.Text;
+using System.Text.Json;
 
 namespace DroneFleet.Infrastructure.Services;
 
@@ -349,7 +347,7 @@ public sealed class DroneFleetService(IDroneRepository repository) : IDroneFleet
         }
 
         var builder = new StringBuilder();
-    builder.AppendLine("Id,Name,Kind,BatteryPercent,IsAirborne,LoadKg,WaypointLat,WaypointLon,PhotoCount");
+        builder.AppendLine("Id,Name,Kind,BatteryPercent,IsAirborne,LoadKg,WaypointLat,WaypointLon,PhotoCount");
 
         foreach (var snapshot in _repository.List().OrderBy(drone => drone.Id).Select(drone => drone.ToSnapshot()))
         {

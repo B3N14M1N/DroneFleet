@@ -1,6 +1,6 @@
-using System.Collections.Concurrent;
 using DroneFleet.Domain.Common;
 using DroneFleet.Domain.Repositories;
+using System.Collections.Concurrent;
 
 namespace DroneFleet.Infrastructure.Repositories;
 

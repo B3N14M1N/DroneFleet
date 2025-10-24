@@ -76,7 +76,7 @@ public sealed class SurveyDrone : Drone
 
     public override string ToString()
     {
-        return base.ToString() + ","+
+        return base.ToString() + "," +
             $" Waypoint: {(CurrentWaypoint != null ? CurrentWaypoint : "None")}," +
             $" PhotoCount: {PhotoCount}";
     }

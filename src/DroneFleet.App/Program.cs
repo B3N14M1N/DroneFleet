@@ -12,13 +12,13 @@ var registry = new CommandRegistry();
 var help = new HelpCommand(registry);
 
 var updateRegistry = new DroneUpdateRegistry();
-updateRegistry.Register(new BatteryChargeHandler(), "charge");
-updateRegistry.Register(new TakeOffUpdateHandler(), "takeoff");
-updateRegistry.Register(new LandUpdateHandler(), "land");
-updateRegistry.Register(new WaypointUpdateHandler(), "waypoint");
-updateRegistry.Register(new CargoLoadUpdateHandler(), "load");
-updateRegistry.Register(new CargoUnloadUpdateHandler(), "unload");
-updateRegistry.Register(new CapturePhotoUpdateHandler(), "capture");
+updateRegistry.Register(new BatteryChargeHandler());
+updateRegistry.Register(new TakeOffUpdateHandler(), "fly");
+updateRegistry.Register(new LandUpdateHandler());
+updateRegistry.Register(new WaypointUpdateHandler(), "wp");
+updateRegistry.Register(new CargoLoadUpdateHandler());
+updateRegistry.Register(new CargoUnloadUpdateHandler());
+updateRegistry.Register(new CapturePhotoUpdateHandler(), "snap");
 
 registry.Register(help, "?");
 registry.Register(new ImportCommand());

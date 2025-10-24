@@ -1,6 +1,3 @@
-using System.Linq;
-using System.Threading;
-using DroneFleet.App.ConsoleApp.Commands;
 using DroneFleet.Domain.Services;
 
 namespace DroneFleet.App.ConsoleApp;

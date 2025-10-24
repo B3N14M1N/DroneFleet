@@ -1,4 +1,3 @@
-using DroneFleet.App.ConsoleApp;
 using DroneFleet.Domain.Common;
 using DroneFleet.Domain.Models;
 

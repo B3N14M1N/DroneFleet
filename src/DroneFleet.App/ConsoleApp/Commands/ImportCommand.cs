@@ -1,5 +1,5 @@
-using DroneFleet.Domain.Operations;
 using DroneFleet.Domain.Common;
+using DroneFleet.Domain.Operations;
 
 namespace DroneFleet.App.ConsoleApp.Commands;
 

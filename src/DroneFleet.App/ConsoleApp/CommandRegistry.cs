@@ -1,4 +1,3 @@
-using System.Linq;
 using DroneFleet.App.ConsoleApp.Commands;
 
 namespace DroneFleet.App.ConsoleApp;

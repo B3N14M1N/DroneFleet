@@ -1,4 +1,3 @@
-using DroneFleet.App.ConsoleApp;
 using DroneFleet.Domain.Models;
 
 namespace DroneFleet.App.ConsoleApp.Updates;

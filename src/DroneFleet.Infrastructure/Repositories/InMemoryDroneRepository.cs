@@ -1,4 +1,3 @@
-using System.Threading;
 using DroneFleet.Domain.Common;
 using DroneFleet.Domain.Models;
 using DroneFleet.Domain.Repositories;

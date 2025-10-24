@@ -1,6 +1,7 @@
-using DroneFleet.Domain.Extensions;
 using DroneFleet.Domain.Common;
+using DroneFleet.Domain.Extensions;
 using DroneFleet.Domain.Models;
+
 namespace DroneFleet.App.ConsoleApp.Commands;
 
 /// <summary>
