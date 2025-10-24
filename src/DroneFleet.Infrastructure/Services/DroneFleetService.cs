@@ -6,6 +6,7 @@ using DroneFleet.Domain.Models;
 using DroneFleet.Domain.Repositories;
 using DroneFleet.Domain.Services;
 using DroneFleet.Infrastructure.FileIO;
+using DroneFleet.Infrastructure.Logging;
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
@@ -15,11 +16,12 @@ namespace DroneFleet.Infrastructure.Services;
 /// <summary>
 /// Provides fleet management operations implemented against an in-memory repository.
 /// </summary>
-public sealed partial class DroneFleetService(IDroneRepository repository) : IDroneFleetService
+public sealed partial class DroneFleetService(IDroneRepository repository, IAppLogger? logger = null) : IDroneFleetService
 {
     private static readonly CultureInfo Culture = CultureInfo.InvariantCulture;
     private readonly IDroneRepository _repository = repository ?? throw new ArgumentNullException(nameof(repository));
     private readonly DroneCsvParser _parser = new();
+    private readonly IAppLogger? _logger = logger;
     private readonly JsonSerializerOptions _jsonOptions = new()
     {
         WriteIndented = true

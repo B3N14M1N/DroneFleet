@@ -5,6 +5,7 @@ using DroneFleet.Domain.Operations;
 using DroneFleet.Infrastructure.FileIO;
 using System.Collections.Concurrent;
 using System.Text.Json;
+using DroneFleet.Infrastructure.Logging;
 
 namespace DroneFleet.Infrastructure.Services;
 
@@ -67,6 +68,7 @@ public sealed partial class DroneFleetService
             }
             catch (Exception ex)
             {
+                _logger?.Error($"Import failed for '{fileName}'", ex);
                 issues.Add(new ImportIssue(fileName, 0, $"Failed to read file. {ex.Message}"));
                 Interlocked.Increment(ref malformed);
             }
@@ -78,6 +80,7 @@ public sealed partial class DroneFleetService
             var lines = await File.ReadAllLinesAsync(path, ct);
             if (lines.Length == 0)
             {
+                _logger?.Warn($"CSV '{fileName}' empty");
                 issues.Add(new ImportIssue(fileName, 0, "File is empty."));
                 Interlocked.Increment(ref malformed);
                 return;
@@ -96,6 +99,7 @@ public sealed partial class DroneFleetService
                 if (!parseResult.IsSuccess || parseResult.Value is null)
                 {
                     Interlocked.Increment(ref malformed);
+                    _logger?.Warn($"CSV '{fileName}' malformed row {lineNumber}: {parseResult.Error}");
                     issues.Add(new ImportIssue(fileName, lineNumber, parseResult.Error ?? "Malformed row."));
                     continue;
                 }
@@ -105,6 +109,7 @@ public sealed partial class DroneFleetService
                 if (!droneResult.IsSuccess || droneResult.Value is null)
                 {
                     Interlocked.Increment(ref malformed);
+                    _logger?.Warn($"CSV '{fileName}' invalid snapshot row {lineNumber}: {droneResult.Error}");
                     issues.Add(new ImportIssue(fileName, lineNumber, droneResult.Error ?? "Invalid drone snapshot."));
                     continue;
                 }
@@ -115,11 +120,13 @@ public sealed partial class DroneFleetService
                     if (addResult.ErrorCode == ResultCodes.DuplicateKey)
                     {
                         Interlocked.Increment(ref duplicates);
+                        _logger?.Info($"CSV '{fileName}' duplicate id at row {lineNumber}");
                         issues.Add(new ImportIssue(fileName, lineNumber, addResult.Error ?? "Duplicate drone id."));
                     }
                     else
                     {
                         Interlocked.Increment(ref malformed);
+                        _logger?.Error($"CSV '{fileName}' store failure row {lineNumber}: {addResult.Error}");
                         issues.Add(new ImportIssue(fileName, lineNumber, addResult.Error ?? "Failed to store drone."));
                     }
                     continue;
@@ -139,6 +146,7 @@ public sealed partial class DroneFleetService
                 var single = await JsonSerializer.DeserializeAsync<DroneSnapshot>(stream, _jsonOptions, ct);
                 if (single is null)
                 {
+                    _logger?.Warn($"JSON '{fileName}' empty or invalid");
                     issues.Add(new ImportIssue(fileName, 0, "JSON file is empty or invalid."));
                     Interlocked.Increment(ref malformed);
                     return;
@@ -155,6 +163,7 @@ public sealed partial class DroneFleetService
                 if (!droneResult.IsSuccess || droneResult.Value is null)
                 {
                     Interlocked.Increment(ref malformed);
+                    _logger?.Warn($"JSON '{fileName}' invalid snapshot index {lineNumber}: {droneResult.Error}");
                     issues.Add(new ImportIssue(fileName, lineNumber, droneResult.Error ?? "Invalid drone snapshot."));
                     continue;
                 }
@@ -164,11 +173,13 @@ public sealed partial class DroneFleetService
                     if (addResult.ErrorCode == ResultCodes.DuplicateKey)
                     {
                         Interlocked.Increment(ref duplicates);
+                        _logger?.Info($"JSON '{fileName}' duplicate id at index {lineNumber}");
                         issues.Add(new ImportIssue(fileName, lineNumber, addResult.Error ?? "Duplicate drone id."));
                     }
                     else
                     {
                         Interlocked.Increment(ref malformed);
+                        _logger?.Error($"JSON '{fileName}' store failure index {lineNumber}: {addResult.Error}");
                         issues.Add(new ImportIssue(fileName, lineNumber, addResult.Error ?? "Failed to store drone."));
                     }
                     continue;

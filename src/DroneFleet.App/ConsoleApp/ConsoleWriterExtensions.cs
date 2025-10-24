@@ -3,25 +3,31 @@ namespace DroneFleet.App.ConsoleApp;
 /// <summary>
 /// Provides helpers for writing coloured output to the console when available.
 /// </summary>
+using DroneFleet.Infrastructure.Logging;
+
 internal static class ConsoleWriterExtensions
 {
-    public static void WriteErrorLine(this TextWriter writer, string message)
+    public static void WriteErrorLine(this TextWriter writer, string message, IAppLogger? logger = null)
     {
+        logger?.Error(message);
         WriteLineWithColour(writer, message, ConsoleColor.Red);
     }
 
-    public static void WriteWarningLine(this TextWriter writer, string message)
+    public static void WriteWarningLine(this TextWriter writer, string message, IAppLogger? logger = null)
     {
+        logger?.Warn(message);
         WriteLineWithColour(writer, message, ConsoleColor.Yellow);
     }
 
-    public static void WriteSuccessLine(this TextWriter writer, string message)
+    public static void WriteSuccessLine(this TextWriter writer, string message, IAppLogger? logger = null)
     {
+        logger?.Info("SUCCESS: " + message);
         WriteLineWithColour(writer, message, ConsoleColor.Green);
     }
 
-    public static void WriteInfoLine(this TextWriter writer, string message)
+    public static void WriteInfoLine(this TextWriter writer, string message, IAppLogger? logger = null)
     {
+        logger?.Info(message);
         WriteLineWithColour(writer, message, ConsoleColor.Cyan);
     }
 

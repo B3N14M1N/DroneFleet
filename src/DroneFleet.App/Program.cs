@@ -4,9 +4,11 @@ using DroneFleet.App.ConsoleApp.Updates;
 using DroneFleet.App.ConsoleApp.Updates.Handlers;
 using DroneFleet.Infrastructure.Repositories;
 using DroneFleet.Infrastructure.Services;
+using DroneFleet.Infrastructure.Logging;
 
 var repository = new InMemoryDroneRepository();
-var fleetService = new DroneFleetService(repository);
+var logger = new FileAppLogger(Path.Combine(AppContext.BaseDirectory, "logs", "dronefleet.log"));
+var fleetService = new DroneFleetService(repository, logger);
 
 var registry = new CommandRegistry();
 var help = new HelpCommand(registry);
@@ -29,5 +31,6 @@ registry.Register(new StatsCommand());
 registry.Register(new ActionCommand(updateRegistry));
 registry.Register(new ExitCommand(), "quit");
 
-var app = new FleetConsoleApp(registry, fleetService);
+var app = new FleetConsoleApp(registry, fleetService, logger);
 await app.RunAsync();
+logger.Dispose();

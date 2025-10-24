@@ -74,7 +74,7 @@ internal sealed class ImportCommand : IConsoleCommand
         }
 
         // Write header first (always green)
-        context.Output.WriteSuccessLine(header.ToString().TrimEnd());
+            context.WriteSuccess(header.ToString().TrimEnd());
 
         if (issues.Length > 0)
         {
@@ -82,10 +82,10 @@ internal sealed class ImportCommand : IConsoleCommand
             bool hasErrors = summary.Issues.Any(i => !i.Message.Contains("duplicate", StringComparison.OrdinalIgnoreCase));
             bool hasDuplicatesOnly = summary.Issues.Count > 0 && !hasErrors;
             var issuesText = issues.ToString().TrimEnd();
-            if (hasErrors)
-                context.Output.WriteErrorLine(issuesText);
+                if (hasErrors)
+                    context.WriteError(issuesText);
             else if (hasDuplicatesOnly)
-                context.Output.WriteWarningLine(issuesText);
+                    context.WriteWarning(issuesText);
         }
     }
 }

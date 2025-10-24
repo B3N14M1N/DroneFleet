@@ -5,7 +5,9 @@ namespace DroneFleet.App.ConsoleApp;
 /// <summary>
 /// Provides shared services and helpers for commands.
 /// </summary>
-internal sealed class CommandContext(IDroneFleetService fleetService, TextReader input, TextWriter output, Action requestExit, CancellationToken shutdownToken)
+using DroneFleet.Infrastructure.Logging;
+
+internal sealed class CommandContext(IDroneFleetService fleetService, TextReader input, TextWriter output, Action requestExit, CancellationToken shutdownToken, IAppLogger? logger)
 {
     private readonly Action _requestExit = requestExit ?? throw new ArgumentNullException(nameof(requestExit));
 
@@ -34,11 +36,25 @@ internal sealed class CommandContext(IDroneFleetService fleetService, TextReader
     /// </summary>
     public void RequestExit() => _requestExit();
 
-    public void WriteError(string message) => Output.WriteErrorLine(message);
+    private readonly IAppLogger? _logger = logger;
 
-    public void WriteWarning(string message) => Output.WriteWarningLine(message);
+    public void WriteError(string message)
+    {
+        Output.WriteErrorLine(message, _logger);
+    }
 
-    public void WriteSuccess(string message) => Output.WriteSuccessLine(message);
+    public void WriteWarning(string message)
+    {
+        Output.WriteWarningLine(message, _logger);
+    }
 
-    public void WriteInfo(string message) => Output.WriteInfoLine(message);
+    public void WriteSuccess(string message)
+    {
+        Output.WriteSuccessLine(message, _logger);
+    }
+
+    public void WriteInfo(string message)
+    {
+        Output.WriteInfoLine(message, _logger);
+    }
 }

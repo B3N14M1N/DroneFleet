@@ -1,16 +1,18 @@
 using DroneFleet.Domain.Services;
+using DroneFleet.Infrastructure.Logging;
 
 namespace DroneFleet.App.ConsoleApp;
 
 /// <summary>
 /// Provides the interactive console shell for managing the drone fleet.
 /// </summary>
-internal sealed class FleetConsoleApp(CommandRegistry registry, IDroneFleetService fleetService, TextReader? input = null, TextWriter? output = null)
+internal sealed class FleetConsoleApp(CommandRegistry registry, IDroneFleetService fleetService, IAppLogger? logger, TextReader? input = null, TextWriter? output = null)
 {
     private readonly CommandRegistry _registry = registry ?? throw new ArgumentNullException(nameof(registry));
     private readonly IDroneFleetService _fleetService = fleetService ?? throw new ArgumentNullException(nameof(fleetService));
     private readonly TextReader _input = input ?? Console.In;
     private readonly TextWriter _output = output ?? Console.Out;
+    private readonly IAppLogger? _logger = logger;
 
     /// <summary>
     /// Runs the command loop until the user exits or cancellation is requested.
@@ -64,7 +66,7 @@ internal sealed class FleetConsoleApp(CommandRegistry registry, IDroneFleetServi
                 }
 
                 using var commandCts = CancellationTokenSource.CreateLinkedTokenSource(shutdownCts.Token);
-                var context = new CommandContext(_fleetService, _input, _output, shutdownCts.Cancel, shutdownCts.Token);
+                var context = new CommandContext(_fleetService, _input, _output, shutdownCts.Cancel, shutdownCts.Token, _logger);
 
                 try
                 {
@@ -79,6 +81,7 @@ internal sealed class FleetConsoleApp(CommandRegistry registry, IDroneFleetServi
                 }
                 catch (Exception ex)
                 {
+                    _logger?.Error("Command execution failure", ex);
                     _output.WriteErrorLine($"Error: {ex.Message}");
                 }
             }
