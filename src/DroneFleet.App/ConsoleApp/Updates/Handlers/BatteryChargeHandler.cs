@@ -1,18 +1,17 @@
-using System.Globalization;
-using DroneFleet.App.ConsoleApp;
 using DroneFleet.Domain.Common;
 using DroneFleet.Domain.Models;
+using System.Globalization;
 
 namespace DroneFleet.App.ConsoleApp.Updates.Handlers;
 
 /// <summary>
-/// Handles battery update operations for any drone type.
+/// Handles battery charge operations for any drone type.
 /// </summary>
-internal sealed class BatteryUpdateHandler : IDroneUpdateHandler
+internal sealed class BatteryChargeHandler : IDroneUpdateHandler
 {
     private static readonly CultureInfo Culture = CultureInfo.InvariantCulture;
 
-    public string Keyword => "battery";
+    public string Keyword => "charge";
 
     public bool Supports(Drone drone) => drone is not null;
 
@@ -20,15 +19,15 @@ internal sealed class BatteryUpdateHandler : IDroneUpdateHandler
     {
         if (arguments.Count == 0)
         {
-            return new DroneUpdateResponse(Result.Failure("Battery update requires a percentage value.", ResultCodes.Validation), null);
+            return new DroneUpdateResponse(Result.Failure("Charge action requires a percentage value.", ResultCodes.Validation), null);
         }
 
         if (!double.TryParse(arguments[0], NumberStyles.Float, Culture, out var level))
         {
-            return new DroneUpdateResponse(Result.Failure("Invalid battery percentage.", ResultCodes.Validation), null);
+            return new DroneUpdateResponse(Result.Failure("Invalid charge percentage.", ResultCodes.Validation), null);
         }
 
-        var result = context.FleetService.UpdateBattery(drone.Id, level);
+        var result = context.FleetService.ChargeDrone(drone.Id, level);
         if (!result.IsSuccess)
         {
             return new DroneUpdateResponse(result, null);
@@ -36,8 +35,8 @@ internal sealed class BatteryUpdateHandler : IDroneUpdateHandler
 
         var updated = context.FleetService.GetDrone(drone.Id);
         var message = updated.IsSuccess && updated.Value is not null
-            ? $"Drone {drone.Id} battery set to {updated.Value.BatteryPercent}%"
-            : $"Drone {drone.Id} battery updated.";
+            ? $"Drone {drone.Id} charged. Battery level: {updated.Value.BatteryPercent}%"
+            : $"Drone {drone.Id} charged.";
 
         return new DroneUpdateResponse(result, message);
     }

@@ -21,6 +21,11 @@ internal interface IConsoleCommand
     string Usage { get; }
 
     /// <summary>
+    /// Gets detailed help text for the command.
+    /// </summary>
+    string HelpText { get; }
+
+    /// <summary>
     /// Executes the command using the provided context and arguments.
     /// </summary>
     ValueTask ExecuteAsync(CommandContext context, IReadOnlyList<string> arguments, CancellationToken cancellationToken);

@@ -51,6 +51,17 @@ internal sealed class DroneUpdateRegistry
             .ToArray();
     }
 
+    /// <summary>
+    /// Retrieves all registered update keywords irrespective of drone type.
+    /// </summary>
+    public IReadOnlyList<string> GetAllKeywords()
+    {
+        return _handlers.Keys
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(k => k)
+            .ToArray();
+    }
+
     private void AddHandler(string keyword, IDroneUpdateHandler handler)
     {
         if (!_handlers.TryGetValue(keyword, out var list))

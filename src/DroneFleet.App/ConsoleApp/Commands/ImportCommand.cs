@@ -1,6 +1,5 @@
-using DroneFleet.App.ConsoleApp;
-using DroneFleet.Domain.Common;
 using DroneFleet.Domain.Operations;
+using DroneFleet.Domain.Common;
 
 namespace DroneFleet.App.ConsoleApp.Commands;
 
@@ -15,6 +14,11 @@ internal sealed class ImportCommand : IConsoleCommand
 
     public string Usage => "import <file1.csv> [file2.csv ...]";
 
+    public string HelpText =>
+        "import <file1.csv> [file2.csv ...]" + Environment.NewLine +
+        "Imports one or more CSV files. Relative paths are resolved against the project root." + Environment.NewLine +
+        "Each file must include the header: Id,Name,Kind,BatteryPercent,IsAirborne,LoadKg,WaypointLat,WaypointLon,PhotoCount";
+
     public async ValueTask ExecuteAsync(CommandContext context, IReadOnlyList<string> arguments, CancellationToken cancellationToken)
     {
         if (arguments.Count == 0)
@@ -26,7 +30,8 @@ internal sealed class ImportCommand : IConsoleCommand
         var result = await context.FleetService.ImportFromCsvAsync(arguments, cancellationToken);
         if (!result.IsSuccess || result.Value is null)
         {
-            context.WriteError(result.Error ?? "Import failed.");
+            var baseResult = Result.Failure(result.Error ?? "Import failed.", result.ErrorCode ?? ResultCodes.Validation);
+            context.WriteError(ConsoleHttpStatusFormatter.Format(baseResult));
             return;
         }
 
@@ -35,39 +40,51 @@ internal sealed class ImportCommand : IConsoleCommand
 
     private static void WriteSummary(CommandContext context, FleetImportResult summary)
     {
-        context.Output.WriteInfoLine($"Files processed: {summary.FilesProcessed}");
-        context.Output.WriteInfoLine($"Rows processed: {summary.TotalRows}");
-        context.Output.WriteSuccessLine($"Imported: {summary.Imported}");
+        var header = new System.Text.StringBuilder();
+        var issues = new System.Text.StringBuilder();
 
-        if (summary.Duplicates > 0)
-        {
-            context.Output.WriteWarningLine($"Duplicates skipped: {summary.Duplicates}");
-        }
-        else
-        {
-            context.Output.WriteInfoLine("Duplicates skipped: 0");
-        }
+        // Header & counts (always success colour regardless of issues)
+        header.AppendLine(ConsoleHttpStatusFormatter.Format(Result.Success(), "Import complete"));
+        header.AppendLine($"  Files processed: {summary.FilesProcessed}");
+        header.AppendLine($"  Rows processed: {summary.TotalRows}");
+        header.AppendLine($"  Imported: {summary.Imported}");
+        header.AppendLine(summary.Duplicates > 0
+            ? $"  Duplicates skipped: {summary.Duplicates}"
+            : "  Duplicates: 0");
+        header.AppendLine(summary.Malformed > 0
+            ? $"  Malformed rows: {summary.Malformed}"
+            : "  Malformed rows: 0");
 
-        if (summary.Malformed > 0)
-        {
-            context.Output.WriteErrorLine($"Malformed rows: {summary.Malformed}");
-        }
-        else
-        {
-            context.Output.WriteInfoLine("Malformed rows: 0");
-        }
-
+        // Issues block (each with code)
         if (summary.Issues.Count > 0)
         {
-            context.Output.WriteWarningLine("Issues:");
             foreach (var issue in summary.Issues)
             {
-                context.Output.WriteWarningLine($"  {issue.Source}:{issue.LineNumber} - {issue.Message}");
+                var messageLower = issue.Message.ToLowerInvariant();
+                Result lineResult = messageLower.Contains("duplicate")
+                    ? Result.Failure(issue.Message, ResultCodes.DuplicateKey)
+                    : messageLower.Contains("not found")
+                        ? Result.Failure(issue.Message, ResultCodes.NotFound)
+                        : Result.Failure(issue.Message, ResultCodes.Validation);
+
+                var formatted = ConsoleHttpStatusFormatter.Format(lineResult, $"{issue.Source}:{issue.LineNumber} - {issue.Message}");
+                issues.AppendLine(formatted);
             }
         }
-        else
+
+        // Write header first (always green)
+        context.Output.WriteSuccessLine(header.ToString().TrimEnd());
+
+        if (issues.Length > 0)
         {
-            context.Output.WriteSuccessLine("No issues detected.");
+            // Classify overall severity of issues block
+            bool hasErrors = summary.Issues.Any(i => !i.Message.Contains("duplicate", StringComparison.OrdinalIgnoreCase));
+            bool hasDuplicatesOnly = summary.Issues.Count > 0 && !hasErrors;
+            var issuesText = issues.ToString().TrimEnd();
+            if (hasErrors)
+                context.Output.WriteErrorLine(issuesText);
+            else if (hasDuplicatesOnly)
+                context.Output.WriteWarningLine(issuesText);
         }
     }
 }

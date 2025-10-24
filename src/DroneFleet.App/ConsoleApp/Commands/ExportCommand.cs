@@ -1,5 +1,3 @@
-using System.IO;
-using DroneFleet.App.ConsoleApp;
 using DroneFleet.Domain.Common;
 
 namespace DroneFleet.App.ConsoleApp.Commands;
@@ -15,10 +13,16 @@ internal sealed class ExportCommand : IConsoleCommand
 
     public string Usage => "export json <path> | export csv <path>";
 
+    public string HelpText =>
+        "export json <path> | export csv <path>" + Environment.NewLine +
+        "Exports fleet data. Relative paths are resolved against the project root." + Environment.NewLine +
+        "Example: export csv data/out/fleet.csv";
+
     public async ValueTask ExecuteAsync(CommandContext context, IReadOnlyList<string> arguments, CancellationToken cancellationToken)
     {
         if (arguments.Count < 2)
         {
+            // Plain usage (no status codes) for simplicity
             context.WriteInfo("Usage: " + Usage);
             return;
         }
@@ -30,7 +34,8 @@ internal sealed class ExportCommand : IConsoleCommand
         {
             if (!await ConfirmOverwriteAsync(context, destination, cancellationToken))
             {
-                context.WriteWarning("Export cancelled.");
+                // Simple warning without HTTP code noise
+                context.WriteWarning("Export cancelled (overwrite declined).");
                 return;
             }
         }
@@ -49,11 +54,13 @@ internal sealed class ExportCommand : IConsoleCommand
 
         if (!result.Value.IsSuccess)
         {
-            context.WriteError(result.Value.Error ?? "Export failed.");
+            var baseResult = Result.Failure(result.Value.Error ?? "Export failed.", result.Value.ErrorCode ?? ResultCodes.Validation);
+            context.WriteError(ConsoleHttpStatusFormatter.Format(baseResult));
             return;
         }
 
-        context.WriteSuccess($"Exported fleet to {destination}.");
+        // Single success status-coded line
+        context.WriteSuccess(ConsoleHttpStatusFormatter.Format(Result.Success(), $"Exported fleet to {destination}."));
     }
 
     private static async Task<bool> ConfirmOverwriteAsync(CommandContext context, string destination, CancellationToken cancellationToken)
@@ -72,7 +79,7 @@ internal sealed class ExportCommand : IConsoleCommand
 
     private static Result? ResultForInvalidFormat(CommandContext context)
     {
-        context.WriteError("Unknown export format. Use 'json' or 'csv'.");
+        context.WriteError(ConsoleHttpStatusFormatter.Format(Result.Failure("Unknown export format.", ResultCodes.Validation), "Unknown export format. Use 'json' or 'csv'."));
         return null;
     }
 }

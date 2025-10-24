@@ -43,5 +43,5 @@ internal sealed class CommandRegistry
         return _commands.TryGetValue(name, out command!);
     }
 
-    public IReadOnlyCollection<IConsoleCommand> Commands => _commands.Values.Distinct().OrderBy(c => c.Name).ToArray();
+    public IReadOnlyCollection<IConsoleCommand> Commands => _commands.Values.Distinct().ToArray();
 }

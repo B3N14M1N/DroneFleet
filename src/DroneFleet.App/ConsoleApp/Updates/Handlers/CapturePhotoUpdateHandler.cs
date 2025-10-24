@@ -1,4 +1,3 @@
-using DroneFleet.App.ConsoleApp;
 using DroneFleet.Domain.Common;
 using DroneFleet.Domain.Models;
 
@@ -9,7 +8,7 @@ namespace DroneFleet.App.ConsoleApp.Updates.Handlers;
 /// </summary>
 internal sealed class CapturePhotoUpdateHandler : IDroneUpdateHandler
 {
-    public string Keyword => "photo";
+    public string Keyword => "capture";
 
     public bool Supports(Drone drone) => drone is SurveyDrone;
 

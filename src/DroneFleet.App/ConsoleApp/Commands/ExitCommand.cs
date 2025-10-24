@@ -1,5 +1,3 @@
-using DroneFleet.App.ConsoleApp;
-
 namespace DroneFleet.App.ConsoleApp.Commands;
 
 /// <summary>
@@ -12,6 +10,8 @@ internal sealed class ExitCommand : IConsoleCommand
     public string Description => "Exits the application.";
 
     public string Usage => "exit";
+
+    public string HelpText => "exit" + Environment.NewLine + "Terminates the application immediately.";
 
     public ValueTask ExecuteAsync(CommandContext context, IReadOnlyList<string> arguments, CancellationToken cancellationToken)
     {

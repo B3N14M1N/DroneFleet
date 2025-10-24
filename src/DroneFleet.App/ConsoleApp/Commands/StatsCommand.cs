@@ -1,4 +1,4 @@
-using DroneFleet.App.ConsoleApp;
+using DroneFleet.Domain.Common;
 using DroneFleet.Domain.Analytics;
 
 namespace DroneFleet.App.ConsoleApp.Commands;
@@ -14,6 +14,10 @@ internal sealed class StatsCommand : IConsoleCommand
 
     public string Usage => "stats";
 
+    public string HelpText =>
+        "stats" + Environment.NewLine +
+        "Displays aggregate fleet statistics (counts, averages, top battery levels).";
+
     public ValueTask ExecuteAsync(CommandContext context, IReadOnlyList<string> arguments, CancellationToken cancellationToken)
     {
         var summary = context.FleetService.GetSummary();
@@ -23,7 +27,9 @@ internal sealed class StatsCommand : IConsoleCommand
 
     private static void WriteSummary(CommandContext context, DroneFleetSummary summary)
     {
-        context.Output.WriteInfoLine($"Total drones: {summary.TotalDrones}");
+    // Single status-coded header to indicate successful stats retrieval
+    context.Output.WriteInfoLine(ConsoleHttpStatusFormatter.Format(Result.Success(), "Fleet statistics:"));
+    context.Output.WriteInfoLine($"Total drones: {summary.TotalDrones}");
         context.Output.WriteInfoLine($"Airborne: {summary.AirborneDrones}");
         context.Output.WriteInfoLine($"Average battery: {summary.AverageBatteryPercent}%");
         context.Output.WriteInfoLine($"Total cargo load: {summary.TotalCargoLoadKg} kg");

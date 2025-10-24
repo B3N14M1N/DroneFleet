@@ -33,9 +33,10 @@ public sealed class DroneFleetService(IDroneRepository repository) : IDroneFleet
     {
         ArgumentNullException.ThrowIfNull(filePaths);
 
+        var candidates = GetCandidateRoots();
         var files = filePaths
             .Where(path => !string.IsNullOrWhiteSpace(path))
-            .Select(path => Path.GetFullPath(path.Trim('"')))
+            .Select(path => ResolveExistingPath(path, candidates))
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray();
 
@@ -319,13 +320,14 @@ public sealed class DroneFleetService(IDroneRepository repository) : IDroneFleet
             .Select(drone => drone.ToSnapshot())
             .ToArray();
 
-        var directory = Path.GetDirectoryName(destinationPath);
+        var path = ResolveDestinationPath(destinationPath, GetCandidateRoots());
+        var directory = Path.GetDirectoryName(path);
         if (!string.IsNullOrWhiteSpace(directory))
         {
             Directory.CreateDirectory(directory);
         }
 
-        await using var stream = new FileStream(destinationPath, FileMode.Create, FileAccess.Write, FileShare.None, 8192, FileOptions.Asynchronous | FileOptions.SequentialScan);
+        await using var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.None, 8192, FileOptions.Asynchronous | FileOptions.SequentialScan);
         await JsonSerializer.SerializeAsync(stream, snapshots, _jsonOptions, cancellationToken);
         await stream.FlushAsync(cancellationToken);
 
@@ -339,14 +341,15 @@ public sealed class DroneFleetService(IDroneRepository repository) : IDroneFleet
             return Result.Failure("Destination path cannot be empty.", ResultCodes.Validation);
         }
 
-        var directory = Path.GetDirectoryName(destinationPath);
+        var path = ResolveDestinationPath(destinationPath, GetCandidateRoots());
+        var directory = Path.GetDirectoryName(path);
         if (!string.IsNullOrWhiteSpace(directory))
         {
             Directory.CreateDirectory(directory);
         }
 
         var builder = new StringBuilder();
-        builder.AppendLine("Id,Name,Type,BatteryPercent,IsAirborne,LoadKg,WaypointLat,WaypointLon,PhotoCount");
+    builder.AppendLine("Id,Name,Kind,BatteryPercent,IsAirborne,LoadKg,WaypointLat,WaypointLon,PhotoCount");
 
         foreach (var snapshot in _repository.List().OrderBy(drone => drone.Id).Select(drone => drone.ToSnapshot()))
         {
@@ -363,7 +366,7 @@ public sealed class DroneFleetService(IDroneRepository repository) : IDroneFleet
                 .AppendLine();
         }
 
-        await File.WriteAllTextAsync(destinationPath, builder.ToString(), cancellationToken);
+        await File.WriteAllTextAsync(path, builder.ToString(), cancellationToken);
         return Result.Success();
     }
 
@@ -375,5 +378,140 @@ public sealed class DroneFleetService(IDroneRepository repository) : IDroneFleet
         }
 
         return value;
+    }
+
+    private static IReadOnlyList<string> GetCandidateRoots()
+    {
+        var roots = new List<string>();
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        static IEnumerable<string> EnumerateAncestors(string root)
+        {
+            if (string.IsNullOrWhiteSpace(root))
+            {
+                yield break;
+            }
+
+            var current = new DirectoryInfo(root);
+            while (current is not null && current.Exists)
+            {
+                yield return current.FullName;
+                current = current.Parent;
+            }
+        }
+
+        void Add(string? candidate)
+        {
+            if (string.IsNullOrWhiteSpace(candidate))
+            {
+                return;
+            }
+
+            var full = Path.GetFullPath(candidate);
+            if (seen.Add(full))
+            {
+                roots.Add(full);
+            }
+        }
+
+        Add(FindSolutionRoot());
+        Add(Directory.GetCurrentDirectory());
+        Add(AppContext.BaseDirectory);
+
+        foreach (var ancestor in EnumerateAncestors(Directory.GetCurrentDirectory()))
+        {
+            Add(ancestor);
+        }
+
+        foreach (var ancestor in EnumerateAncestors(AppContext.BaseDirectory))
+        {
+            Add(ancestor);
+        }
+
+        if (roots.Count == 0)
+        {
+            Add(Environment.CurrentDirectory);
+        }
+
+        return roots;
+    }
+
+    private static string ResolveExistingPath(string rawPath, IReadOnlyList<string> candidateRoots)
+    {
+        var trimmed = (rawPath ?? string.Empty).Trim().Trim('"');
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            return trimmed;
+        }
+
+        if (Path.IsPathRooted(trimmed))
+        {
+            return Path.GetFullPath(trimmed);
+        }
+
+        foreach (var root in candidateRoots)
+        {
+            var candidate = Path.GetFullPath(Path.Combine(root, trimmed));
+            if (File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        var fallbackRoot = candidateRoots.Count > 0 ? candidateRoots[0] : Directory.GetCurrentDirectory();
+        return Path.GetFullPath(Path.Combine(fallbackRoot, trimmed));
+    }
+
+    private static string ResolveDestinationPath(string rawPath, IReadOnlyList<string> candidateRoots)
+    {
+        var trimmed = (rawPath ?? string.Empty).Trim().Trim('"');
+        if (string.IsNullOrWhiteSpace(trimmed))
+        {
+            return trimmed;
+        }
+
+        if (Path.IsPathRooted(trimmed))
+        {
+            return Path.GetFullPath(trimmed);
+        }
+
+        foreach (var root in candidateRoots)
+        {
+            var candidate = Path.GetFullPath(Path.Combine(root, trimmed));
+            var directory = Path.GetDirectoryName(candidate);
+            if (!string.IsNullOrWhiteSpace(directory) && Directory.Exists(directory))
+            {
+                return candidate;
+            }
+        }
+
+        var fallbackRoot = candidateRoots.Count > 0 ? candidateRoots[0] : Directory.GetCurrentDirectory();
+        return Path.GetFullPath(Path.Combine(fallbackRoot, trimmed));
+    }
+
+    private static string? FindSolutionRoot()
+    {
+        static string? FindFrom(string? start)
+        {
+            if (string.IsNullOrWhiteSpace(start))
+            {
+                return null;
+            }
+
+            var current = new DirectoryInfo(start);
+            while (current is not null && current.Exists)
+            {
+                if (current.EnumerateFiles("*.sln", SearchOption.TopDirectoryOnly).Any())
+                {
+                    return current.FullName;
+                }
+
+                current = current.Parent;
+            }
+
+            return null;
+        }
+
+        return FindFrom(AppContext.BaseDirectory) ?? FindFrom(Directory.GetCurrentDirectory());
     }
 }
