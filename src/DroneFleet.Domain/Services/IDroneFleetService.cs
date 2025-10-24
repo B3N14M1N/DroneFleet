@@ -11,9 +11,9 @@ namespace DroneFleet.Domain.Services;
 public interface IDroneFleetService
 {
     /// <summary>
-    /// Imports fleet information from the provided CSV files.
+    /// Imports fleet information from the provided files (CSV or JSON detected by extension).
     /// </summary>
-    Task<Result<FleetImportResult>> ImportFromCsvAsync(IEnumerable<string> filePaths, CancellationToken cancellationToken);
+    Task<Result<FleetImportResult>> ImportAsync(IEnumerable<string> filePaths, CancellationToken cancellationToken);
 
     /// <summary>
     /// Retrieves all drones stored in the repository.

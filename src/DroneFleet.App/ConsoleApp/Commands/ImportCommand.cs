@@ -10,14 +10,15 @@ internal sealed class ImportCommand : IConsoleCommand
 {
     public string Name => "import";
 
-    public string Description => "Imports fleet data from CSV files.";
+    public string Description => "Imports fleet data from CSV or JSON files.";
 
-    public string Usage => "import <file1.csv> [file2.csv ...]";
+    public string Usage => "import <file1.csv|file1.json> [file2.csv|file2.json ...]";
 
     public string HelpText =>
-        "import <file1.csv> [file2.csv ...]" + Environment.NewLine +
-        "Imports one or more CSV files. Relative paths are resolved against the project root." + Environment.NewLine +
-        "Each file must include the header: Id,Name,Kind,BatteryPercent,IsAirborne,LoadKg,WaypointLat,WaypointLon,PhotoCount";
+    "import <file1.csv|file1.json> [file2.csv|file2.json ...]" + Environment.NewLine +
+    "Imports one or more CSV or JSON files. Relative paths are resolved against the project root." + Environment.NewLine +
+    "CSV requires header: Id,Name,Kind,BatteryPercent,IsAirborne,LoadKg,WaypointLat,WaypointLon,PhotoCount" + Environment.NewLine +
+    "JSON expects an array of snapshot objects with matching property names.";
 
     public async ValueTask ExecuteAsync(CommandContext context, IReadOnlyList<string> arguments, CancellationToken cancellationToken)
     {
@@ -27,7 +28,7 @@ internal sealed class ImportCommand : IConsoleCommand
             return;
         }
 
-        var result = await context.FleetService.ImportFromCsvAsync(arguments, cancellationToken);
+    var result = await context.FleetService.ImportAsync(arguments, cancellationToken);
         if (!result.IsSuccess || result.Value is null)
         {
             var baseResult = Result.Failure(result.Error ?? "Import failed.", result.ErrorCode ?? ResultCodes.Validation);
